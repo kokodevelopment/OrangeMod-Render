@@ -3,6 +3,7 @@ const EventEmitter = require('events');
 const hull = require('hull.js');
 const twgl = require('twgl.js');
 
+const Skin = require('./Skin');
 const BitmapSkin = require('./BitmapSkin');
 const Drawable = require('./Drawable');
 const Rectangle = require('./Rectangle');
@@ -13,6 +14,7 @@ const SVGSkin = require('./SVGSkin');
 const TextBubbleSkin = require('./TextBubbleSkin');
 const TextCostumeSkin = require('./TextCostumeSkin');
 const EffectTransform = require('./EffectTransform');
+const CanvasMeasurementProvider = require('./util/canvas-measurement-provider');
 const log = require('./util/log');
 
 const __isTouchingDrawablesPoint = twgl.v3.create();
@@ -87,6 +89,16 @@ const colorMatches = (a, b, offset) => (
  * @type {number}
  */
 const FENCE_WIDTH = 15;
+
+// Loading text wrapper takes a while because of some of its dependencies, so only do so when needed.
+let _TextWrapper;
+const lazilyLoadTextWrapper = () => {
+    if (!_TextWrapper) {
+        // eslint-disable-next-line global-require
+        _TextWrapper = require('./util/text-wrapper');
+    }
+    return _TextWrapper;
+};
 
 
 class RenderWebGL extends EventEmitter {
@@ -233,8 +245,6 @@ class RenderWebGL extends EventEmitter {
 
         this.dirty = true;
 
-        this.skinsWereAltered = false;
-
         this._createGeometry();
 
         this.on(RenderConstants.Events.NativeSizeChanged, this.onNativeSizeChanged);
@@ -280,6 +290,41 @@ class RenderWebGL extends EventEmitter {
          * @type {boolean}
          */
         this.allowPrivateSkinAccess = true;
+
+        /**
+         * Suggested maximum texture size in texels. This is not a hard limit.
+         * Defualt value is same as Scratch's SVGSkin max.
+         * @type {number}
+         */
+        this.maxTextureDimension = 2048;
+
+        /**
+         * Custom fonts, used by SVGs. Maps font families to their @font-face statement.
+         * Do not modify directly -- use {@link setCustomFonts}.
+         * @type {Record<string, string>}
+         */
+        this.customFonts = {};
+
+        /**
+         * <style> element used for custom fonts.
+         * @type {HTMLStyleElement|null}
+         */
+        this._customFontStyles = null;
+
+        /**
+         * Export internals for third-party extensions.
+         */
+        this.exports = {
+            twgl,
+            Drawable,
+            Skin,
+            BitmapSkin,
+            TextBubbleSkin,
+            PenSkin,
+            SVGSkin,
+            CanvasMeasurementProvider,
+            Rectangle
+        };
     }
 
     // tw: implement high quality pen option
@@ -314,6 +359,15 @@ class RenderWebGL extends EventEmitter {
     setPrivateSkinAccess (allowPrivateSkinAccess) {
         this.allowPrivateSkinAccess = allowPrivateSkinAccess;
         this.emit(RenderConstants.Events.AllowPrivateSkinAccessChanged, allowPrivateSkinAccess);
+    }
+
+    /**
+     * Modify the suggested maximum texture dimension. This should be set before any skins are created.
+     * @param {number} newMax The new maximum in texels
+     */
+    setMaxTextureDimension (newMax) {
+        const hardwareLimit = this._gl.getParameter(this._gl.MAX_TEXTURE_SIZE);
+        this.maxTextureDimension = Math.min(newMax, hardwareLimit);
     }
 
     /**
@@ -364,6 +418,8 @@ class RenderWebGL extends EventEmitter {
      * @param {number} blue The blue component for the background.
      */
     setBackgroundColor (red, green, blue) {
+        this.dirty = true;
+
         this._backgroundColor4f[0] = red;
         this._backgroundColor4f[1] = green;
         this._backgroundColor4f[2] = blue;
@@ -617,6 +673,14 @@ class RenderWebGL extends EventEmitter {
     }
 
     /**
+     * @param {CanvasMeasurementProvider} measurementProvider helper for measuring text
+     * @returns {TextWrapper} an instance of TextWrapper
+     */
+    createTextWrapper (measurementProvider) {
+        return new (lazilyLoadTextWrapper())(measurementProvider);
+    }
+
+    /**
      * Mark a skin as containing private information.
      * @param {number} skinID The skin's ID
      */
@@ -844,11 +908,13 @@ class RenderWebGL extends EventEmitter {
         }
         gl.clear(gl.COLOR_BUFFER_BIT);
 
+        const snapshotRequested = this._snapshotCallbacks.length > 0;
         if (!this.xrSplitting) {
             // draw normally
             this._drawThese(this._drawList, ShaderManager.DRAW_MODE.default, this._projection, {
-                framebufferWidth: this.xrEnabled ? xrLayer.framebufferWidth : gl.canvas.width,
-                framebufferHeight: this.xrEnabled ? xrLayer.framebufferHeight : gl.canvas.height
+                framebufferWidth: gl.canvas.width,
+                framebufferHeight: gl.canvas.height,
+                skipPrivateSkins: snapshotRequested
             });
         } else {
             // draw split
@@ -877,20 +943,26 @@ class RenderWebGL extends EventEmitter {
             gl.scissor(0, 0, width / 2, height);
             this._drawThese(this._drawList, ShaderManager.DRAW_MODE.default, projection1, {
                 framebufferWidth: width,
-                framebufferHeight: height
+                framebufferHeight: height,
+                skipPrivateSkins: snapshotRequested
             });
             // draw right eye
             gl.scissor(width / 2, 0, width / 2, height);
             this._drawThese(this._drawList, ShaderManager.DRAW_MODE.default, projection2, {
                 framebufferWidth: width,
-                framebufferHeight: height
+                framebufferHeight: height,
+                skipPrivateSkins: snapshotRequested
             });
             gl.disable(gl.SCISSOR_TEST);
         }
-        if (this._snapshotCallbacks.length > 0) {
+
+        if (snapshotRequested) {
             const snapshot = gl.canvas.toDataURL();
             this._snapshotCallbacks.forEach(cb => cb(snapshot));
             this._snapshotCallbacks = [];
+            // We need to make sure to always render next frame so that private skins
+            // that were skipped this frame will become visible again shortly.
+            this.dirty = true;
         }
     }
 
@@ -2062,6 +2134,7 @@ class RenderWebGL extends EventEmitter {
      * @param {boolean} opts.ignoreVisibility Draw all, despite visibility (e.g. stamping, touching color)
      * @param {int} opts.framebufferWidth The width of the framebuffer being drawn onto. Defaults to "native" width
      * @param {int} opts.framebufferHeight The height of the framebuffer being drawn onto. Defaults to "native" height
+     * @param {boolean} opts.skipPrivateSkins Do not draw private skins.
      * @private
      */
     _drawThese (drawables, drawMode, projection, opts = {}) {
@@ -2087,6 +2160,9 @@ class RenderWebGL extends EventEmitter {
             // Hidden drawables (e.g., by a "hide" block) are not drawn unless
             // the ignoreVisibility flag is used (e.g. for stamping or touchingColor).
             if (!drawable.getVisible() && !opts.ignoreVisibility) continue;
+
+            // Skip private skins, if requested.
+            if (opts.skipPrivateSkins && drawable.skin.private) continue;
 
             // drawableScale is the "framebuffer-pixel-space" scale of the drawable, as percentages of the drawable's
             // "native size" (so 100 = same as skin's "native size", 200 = twice "native size").
@@ -2335,6 +2411,29 @@ class RenderWebGL extends EventEmitter {
 
     getPenDrawableId () {
         return this._allDrawables.findIndex(drawable => drawable instanceof PenSkin);
+    }
+    
+    /**
+     * Update the list of custom fonts. These fonts will be added to the DOM.
+     * SEURITY CONSIDERATIONS: It is the caller's responsibility to ensure that the @font-face
+     * statements do not contain malicious styles.
+     * @param {Record<string, string>} customFonts Maps full font families (with fallbacks) to @font-face statements.
+     */
+    setCustomFonts (customFonts) {
+        this.customFonts = customFonts;
+        const css = Object.values(customFonts).join('\n');
+
+        if (css.length) {
+            if (!this._customFontStyles) {
+                this._customFontStyles = document.createElement('style');
+                this._customFontStyles.className = 'renderer-custom-fonts';
+                document.head.appendChild(this._customFontStyles);
+            }
+            this._customFontStyles.textContent = css;
+        } else if (this._customFontStyles) {
+            this._customFontStyles.remove();
+            this._customFontStyles = null;
+        }
     }
 }
 
