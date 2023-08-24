@@ -44,6 +44,9 @@ uniform float u_blue;
 #ifdef ENABLE_opaque
 uniform float u_opaque;
 #endif // ENABLE_opaque
+#ifdef ENABLE_saturation
+uniform float u_saturation;
+#endif // ENABLE_saturation
 
 #ifdef DRAW_MODE_line
 varying vec4 v_lineColor;
@@ -65,7 +68,7 @@ varying vec2 v_texCoord;
 // Smaller values can cause problems on some mobile devices.
 const float epsilon = 1e-3;
 
-#if !defined(DRAW_MODE_silhouette) && (defined(ENABLE_color))
+#if !defined(DRAW_MODE_silhouette) && (defined(ENABLE_color) || defined(ENABLE_saturation))
 // Branchless color conversions based on code from:
 // http://www.chilliant.com/rgb2hsv.html by Ian Taylor
 // Based in part on work by Sam Hocevar and Emil Persson
@@ -121,7 +124,7 @@ vec3 convertHSV2RGB(vec3 hsv)
 	float c = hsv.z * hsv.y;
 	return rgb * c + hsv.z - c;
 }
-#endif // !defined(DRAW_MODE_silhouette) && (defined(ENABLE_color))
+#endif // !defined(DRAW_MODE_silhouette) && (defined(ENABLE_color) || defined(ENABLE_saturation))
 
 const vec2 kCenter = vec2(0.5, 0.5);
 
@@ -173,7 +176,7 @@ void main()
 
 	gl_FragColor = texture2D(u_skin, texcoord0);
 
-	#if defined(ENABLE_color) || defined(ENABLE_brightness)
+	#if defined(ENABLE_color) || defined(ENABLE_brightness) || defined(ENABLE_saturation)
 	// Divide premultiplied alpha values for proper color processing
 	// Add epsilon to avoid dividing by 0 for fully transparent pixels
 	gl_FragColor.rgb = clamp(gl_FragColor.rgb / (gl_FragColor.a + epsilon), 0.0, 1.0);
@@ -184,10 +187,14 @@ void main()
 
 		// this code forces grayscale values to be slightly saturated
 		// so that some slight change of hue will be visible
-		const float minLightness = 0.11 / 2.0;
-		const float minSaturation = 0.09;
-		if (hsv.z < minLightness) hsv = vec3(0.0, 1.0, minLightness);
-		else if (hsv.y < minSaturation) hsv = vec3(0.0, minSaturation, hsv.z);
+		
+		// pm: this usually ends up looking ugly in menus and such, so dont do this actually
+		// 	   this might be reverted to do this again though if it is genuinely better
+
+		// const float minLightness = 0.11 / 2.0;
+		// const float minSaturation = 0.09;
+		// if (hsv.z < minLightness) hsv = vec3(0.0, 1.0, minLightness);
+		// else if (hsv.y < minSaturation) hsv = vec3(0.0, minSaturation, hsv.z);
 
 		hsv.x = mod(hsv.x + u_color, 1.0);
 		if (hsv.x < 0.0) hsv.x += 1.0;
@@ -195,6 +202,16 @@ void main()
 		gl_FragColor.rgb = convertHSV2RGB(hsv);
 	}
 	#endif // ENABLE_color
+	
+	#ifdef ENABLE_saturation
+	{
+		vec3 hsv = convertRGB2HSV(gl_FragColor.xyz);
+
+		hsv.y *= u_saturation;
+
+		gl_FragColor.rgb = convertHSV2RGB(hsv);
+	}
+	#endif // ENABLE_saturation
 
 	#ifdef ENABLE_brightness
 	gl_FragColor.rgb = clamp(gl_FragColor.rgb + vec3(u_brightness), vec3(0), vec3(1));
@@ -203,7 +220,7 @@ void main()
 	// Re-multiply color values
 	gl_FragColor.rgb *= gl_FragColor.a + epsilon;
 
-	#endif // defined(ENABLE_color) || defined(ENABLE_brightness)
+	#endif // defined(ENABLE_color) || defined(ENABLE_brightness) || defined(ENABLE_saturation)
 
 	#ifdef ENABLE_ghost
 	gl_FragColor *= u_ghost;

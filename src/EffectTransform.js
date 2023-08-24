@@ -48,9 +48,10 @@ class EffectTransform {
         const uniforms = drawable.getUniforms();
 
         const enableColor = (effects & ShaderManager.EFFECT_INFO.color.mask) !== 0;
+        const enableSaturation = (effects & ShaderManager.EFFECT_INFO.saturation.mask) !== 0;
         const enableBrightness = (effects & ShaderManager.EFFECT_INFO.brightness.mask) !== 0;
 
-        if (enableColor || enableBrightness) {
+        if (enableColor || enableSaturation || enableBrightness) {
             // gl_FragColor.rgb /= gl_FragColor.a + epsilon;
             // Here, we're dividing by the (previously pre-multiplied) alpha to ensure HSV is properly calculated
             // for partially transparent pixels.
@@ -68,24 +69,39 @@ class EffectTransform {
 
                 // this code forces grayscale values to be slightly saturated
                 // so that some slight change of hue will be visible
-                // const float minLightness = 0.11 / 2.0;
-                const minV = 0.11 / 2.0;
-                // const float minSaturation = 0.09;
-                const minS = 0.09;
-                // if (hsv.z < minLightness) hsv = vec3(0.0, 1.0, minLightness);
-                if (hsv[2] < minV) {
-                    hsv[0] = 0;
-                    hsv[1] = 1;
-                    hsv[2] = minV;
-                // else if (hsv.y < minSaturation) hsv = vec3(0.0, minSaturation, hsv.z);
-                } else if (hsv[1] < minS) {
-                    hsv[0] = 0;
-                    hsv[1] = minS;
-                }
+		
+		        // pm: this usually ends up looking ugly in menus and such, so dont do this actually
+		        // 	   this might be reverted to do this again though if it is genuinely better
+
+                // // const float minLightness = 0.11 / 2.0;
+                // const minV = 0.11 / 2.0;
+                // // const float minSaturation = 0.09;
+                // const minS = 0.09;
+                // // if (hsv.z < minLightness) hsv = vec3(0.0, 1.0, minLightness);
+                // if (hsv[2] < minV) {
+                //     hsv[0] = 0;
+                //     hsv[1] = 1;
+                //     hsv[2] = minV;
+                // // else if (hsv.y < minSaturation) hsv = vec3(0.0, minSaturation, hsv.z);
+                // } else if (hsv[1] < minS) {
+                //     hsv[0] = 0;
+                //     hsv[1] = minS;
+                // }
 
                 // hsv.x = mod(hsv.x + u_color, 1.0);
                 // if (hsv.x < 0.0) hsv.x += 1.0;
                 hsv[0] = (uniforms.u_color + hsv[0] + 1);
+
+                // gl_FragColor.rgb = convertHSV2RGB(hsl);
+                hsvToRgb(hsv, inOutColor);
+            }
+
+            if (enableSaturation) {
+                // vec3 hsv = convertRGB2HSV(gl_FragColor.xyz);
+                const hsv = rgbToHsv(inOutColor, __hsv);
+
+                // hsv.y *= u_saturation;
+                hsv[1] = uniforms.u_saturation * hsv[1];
 
                 // gl_FragColor.rgb = convertHSV2RGB(hsl);
                 hsvToRgb(hsv, inOutColor);

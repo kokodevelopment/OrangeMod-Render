@@ -169,6 +169,13 @@ ShaderManager.EFFECT_INFO = {
         mask: 1 << 10,
         converter: x => clampNumber(Math.ceil(x), 1, 100),
         shapeChanges: false
+    },
+    /** Saturation effect */
+    saturation: {
+        uniformName: 'u_saturation',
+        mask: 1 << 11,
+        converter: x => (x / 100) + 1,
+        shapeChanges: false
     }
 };
 
