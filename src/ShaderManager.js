@@ -1,8 +1,6 @@
 const twgl = require('twgl.js');
 
-function clampNumber(num, min, max) {
-    return Math.max(Math.min(num, max), min);
-}
+const clampNumber = (num, min, max) => Math.max(Math.min(num, max), min);
 
 class ShaderManager {
     /**
@@ -67,8 +65,8 @@ class ShaderManager {
         const definesText = `${defines.join('\n')}\n`;
 
         /* eslint-disable global-require */
-        const vsFullText = definesText + require('raw-loader!./shaders/sprite.vert');
-        const fsFullText = definesText + require('raw-loader!./shaders/sprite.frag');
+        const vsFullText = definesText + require('raw-loader!./shaders/sprite.vert.glsl');
+        const fsFullText = definesText + require('raw-loader!./shaders/sprite.frag.glsl');
         /* eslint-enable global-require */
 
         return twgl.createProgramInfo(this._gl, [vsFullText, fsFullText]);
@@ -146,21 +144,21 @@ ShaderManager.EFFECT_INFO = {
     red: {
         uniformName: 'u_red',
         mask: 1 << 7,
-        converter: x => ((clampNumber(x, -100, 100) / 100) * 4 + 1),
+        converter: x => (((clampNumber(x, -100, 100) / 100) * 4) + 1),
         shapeChanges: false
     },
     /** Green effect */
     green: {
         uniformName: 'u_green',
         mask: 1 << 8,
-        converter: x => ((clampNumber(x, -100, 100) / 100) * 4 + 1),
+        converter: x => (((clampNumber(x, -100, 100) / 100) * 4) + 1),
         shapeChanges: false
     },
     /** Blue effect */
     blue: {
         uniformName: 'u_blue',
         mask: 1 << 9,
-        converter: x => ((clampNumber(x, -100, 100) / 100) * 4 + 1),
+        converter: x => (((clampNumber(x, -100, 100) / 100) * 4) + 1),
         shapeChanges: false
     },
     /** Opaque effect */

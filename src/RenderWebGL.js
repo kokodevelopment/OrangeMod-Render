@@ -909,6 +909,7 @@ class RenderWebGL extends EventEmitter {
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         const snapshotRequested = this._snapshotCallbacks.length > 0;
+        // eslint-disable-next-line no-negated-condition
         if (!this.xrSplitting) {
             // draw normally
             this._drawThese(this._drawList, ShaderManager.DRAW_MODE.default, this._projection, {
