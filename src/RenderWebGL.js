@@ -1925,6 +1925,20 @@ class RenderWebGL extends EventEmitter {
     }
 
     /**
+     * translate the pen points
+     * @param {int} penSkinID - the unique ID of a Pen Skin.
+     * @param {number} x - the X offset of the translation.
+     * @param {number} y - the Y offset of the translation.
+     * @param {number} scale - the scale of the translation.
+     * @param {number} dir - the direction of the translation.
+     */
+    penTranslate (penSkinID, x, y, scale, dir) {
+        this.dirty = true;
+        const skin = /** @type {PenSkin} */ this._allSkins[penSkinID];
+        skin.updatePenPointOffset(x, y, scale, dir);
+    }
+
+    /**
      * Clear a pen layer.
      * @param {int} penSkinID - the unique ID of a Pen Skin.
      */

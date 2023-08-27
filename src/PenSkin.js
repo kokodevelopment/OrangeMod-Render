@@ -80,6 +80,8 @@ class PenSkin extends Skin {
         // tw: create the extra data structures needed to buffer pen
         this._resetAttributeIndexes();
         this.a_lineColor = new Float32Array(PEN_BUFFER_SIZE_LARGER);
+        this.a_cameraOffset = new Float32Array(4 * 6);
+        this.updatePenPointOffset(0, 0, 1, 0);
         this.a_lineThicknessAndLength = new Float32Array(PEN_BUFFER_SIZE_SMALLER);
         this.a_penPoints = new Float32Array(PEN_BUFFER_SIZE_LARGER);
         this.a_position = new Float32Array(PEN_BUFFER_SIZE_SMALLER);
@@ -117,6 +119,10 @@ class PenSkin extends Skin {
                 numComponents: 4,
                 drawType: this._renderer.gl.STREAM_DRAW,
                 data: this.a_penPoints
+            },
+            a_cameraOffset: {
+                numComponents: 3,
+                data: this.a_cameraOffset
             }
         });
 
@@ -552,6 +558,16 @@ class PenSkin extends Skin {
 
             this._silhouetteDirty = false;
         }
+    }
+
+    updatePenPointOffset (x, y, scale, rot) {
+        for (let idx = 0; idx < 4 * 6; idx += 4) {
+            this.a_cameraOffset[idx + 0] = x;
+            this.a_cameraOffset[idx + 1] = y;
+            this.a_cameraOffset[idx + 2] = scale;
+            this.a_cameraOffset[idx + 3] = rot;
+        }
+        this._silhouetteDirty = true;
     }
 }
 
