@@ -1,12 +1,10 @@
 precision mediump float;
-#define PI 3.1415926538
 
 #ifdef DRAW_MODE_line
 uniform vec2 u_stageSize;
 attribute vec2 a_lineThicknessAndLength;
 attribute vec4 a_penPoints;
 attribute vec4 a_lineColor;
-attribute vec4 a_cameraOffset;
 
 varying vec4 v_lineColor;
 varying float v_lineThickness;
@@ -16,30 +14,6 @@ varying vec4 v_penPoints;
 // Add this to divisors to prevent division by 0, which results in NaNs propagating through calculations.
 // Smaller values can cause problems on some mobile devices.
 const float epsilon = 1e-3;
-
-vec2 translateToCamera(vec2 pos) {
-	return vec2(
-		a_cameraOffset.x * a_cameraOffset.z +
-            a_cameraOffset.z *
-                (-pos.x *
-                    Math.cos(
-                        ((-(a_cameraOffset.w - 90 - 90) + 90) / 180) * PI
-                    ) -
-                    -pos.y *
-                        Math.sin(
-                            ((-(a_cameraOffset.w - 90 - 90) + 90) / 180) * PI
-                        )),
-        a_cameraOffset.y * a_cameraOffset.z +
-            a_cameraOffset.z *
-                (-pos.x *
-                    Math.sin(
-                        ((-(a_cameraOffset.w - 90 - 90) + 90) / 180) * PI
-                    ) +
-                    -pos.y *
-                        Math.cos(
-                            ((-(a_cameraOffset.w - 90 - 90) + 90) / 180) * PI
-                        )))
-}
 #endif
 
 #if !(defined(DRAW_MODE_line) || defined(DRAW_MODE_background))
@@ -52,7 +26,6 @@ attribute vec2 a_position;
 
 varying vec2 v_texCoord;
 
-
 void main() {
 	#ifdef DRAW_MODE_line
 	// Calculate a rotated ("tight") bounding box around the two pen points.
@@ -61,8 +34,8 @@ void main() {
 
 	// Expand line bounds by sqrt(2) / 2 each side-- this ensures that all antialiased pixels
 	// fall within the quad, even at a 45-degree diagonal
-	vec2 position = translateToCamera(a_position);
-	float expandedRadius = ((a_lineThicknessAndLength.x * a_cameraOffset.z) * 0.5) + 1.4142135623730951;
+	vec2 position = a_position;
+	float expandedRadius = (a_lineThicknessAndLength.x * 0.5) + 1.4142135623730951;
 
 	// The X coordinate increases along the length of the line. It's 0 at the center of the origin point
 	// and is in pixel-space (so at n pixels along the line, its value is n).
@@ -94,10 +67,6 @@ void main() {
 
 	// 4. Apply view transform
 	position *= 2.0 / u_stageSize;
-
-	// translate point by the camera offset stuff
-	position *= a_cameraOffset.z;
-	position += a_cameraOffset.xy;
 	gl_Position = vec4(position, 0, 1);
 
 	v_lineColor = a_lineColor;
