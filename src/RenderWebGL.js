@@ -100,6 +100,17 @@ const lazilyLoadTextWrapper = () => {
     return _TextWrapper;
 };
 
+let _stylesheet;
+const loadStyles = () => {
+    if (!_stylesheet) {
+        _stylesheet = document.createElement('style');
+        // eslint-disable-next-line global-require
+        _stylesheet.textContent = require('!raw-loader!./renderer.css');
+        _stylesheet.className = 'scratch-render-styles';
+        document.head.appendChild(_stylesheet);
+    }
+};
+
 
 class RenderWebGL extends EventEmitter {
     /**
@@ -244,6 +255,20 @@ class RenderWebGL extends EventEmitter {
         this.offscreenTouching = false;
 
         this.dirty = true;
+
+        /**
+         * Element that contains all overlays.
+         * @type {HTMLElement}
+         */
+        this.overlayContainer = document.createElement('div');
+        this.overlayContainer.className = 'scratch-render-overlays';
+
+        /**
+         * @type {Array<{container: HTMLElement; userElement: HTMLElement; mode: string;}>}
+         */
+        this._overlays = [];
+
+        loadStyles();
 
         this._createGeometry();
 
@@ -401,11 +426,13 @@ class RenderWebGL extends EventEmitter {
         if (canvas.width !== newWidth || canvas.height !== newHeight) {
             canvas.width = newWidth;
             canvas.height = newHeight;
+
+            this._updateRenderQuality();
+            this._updateOverlays();
+
             // Resizing the canvas causes it to be cleared, so redraw it.
             this.dirty = true;
             this.draw();
-
-            this._updateRenderQuality();
         }
 
     }
@@ -482,7 +509,70 @@ class RenderWebGL extends EventEmitter {
      */
     _setNativeSize (width, height) {
         this._nativeSize = [width, height];
+        this._updateOverlays();
         this.emit(RenderConstants.Events.NativeSizeChanged, {newSize: this._nativeSize});
+    }
+
+    /**
+     * @param {HTMLElement} element HTML element
+     * @param {string} mode Resize mode
+     * @returns {*} Internal overlay object
+     */
+    addOverlay (element, mode = 'scale') {
+        const container = document.createElement('div');
+        container.appendChild(element);
+        this.overlayContainer.appendChild(container);
+        const overlay = {
+            container,
+            userElement: element,
+            mode
+        };
+        this._overlays.push(overlay);
+        this._updateOverlays();
+        return overlay;
+    }
+
+    /**
+     * @param {HTMLElement} element HTML element
+     */
+    removeOverlay (element) {
+        const overlayIndex = this._overlays.findIndex(i => i.userElement === element);
+        if (overlayIndex !== -1) {
+            this._overlays[overlayIndex].container.remove();
+            this._overlays.splice(overlayIndex, 1);
+        }
+    }
+
+    _updateOverlays () {
+        const [nativeWidth, nativeHeight] = this._nativeSize;
+        const dpiIndependentWidth = this.canvas.width / window.devicePixelRatio;
+        const dpiIndependentHeight = this.canvas.height / window.devicePixelRatio;
+
+        this.overlayContainer.style.width = `${dpiIndependentWidth}px`;
+        this.overlayContainer.style.height = `${dpiIndependentHeight}px`;
+
+        for (const overlay of this._overlays) {
+            const container = overlay.container;
+            if (overlay.mode === 'scale' || overlay.mode === 'scale-centered') {
+                const xScale = dpiIndependentWidth / nativeWidth;
+                const yScale = dpiIndependentHeight / nativeHeight;
+                container.style.width = `${nativeWidth}px`;
+                container.style.height = `${nativeHeight}px`;
+
+                const scale = `scale(${xScale}, ${yScale})`;
+                container.style.transformOrigin = 'top left';
+                if (overlay.mode === 'scale') {
+                    container.style.transform = scale;
+                } else {
+                    const shiftToCenter = `translate(${nativeWidth / 2}px, ${nativeHeight / 2}px)`;
+                    container.style.transform = `${scale} ${shiftToCenter}`;
+                }
+            } else {
+                container.style.transform = '';
+                container.style.width = '100%';
+                container.style.height = '100%';
+            }
+        }
     }
 
     /**
