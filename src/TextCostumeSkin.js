@@ -100,9 +100,11 @@ class TextCostumeSkin extends Skin {
     _reflowLines(scale) {
         let maxWidth = this.style.MAX_LINE_WIDTH; // Max width is in "native scratch units", convert to raw pixels
 
-        maxWidth *= this._renderer.gl.canvas.width / this._renderer.getNativeSize()[0]; // Shrink the max width if the drawable is scaled up
+        // pm: these 2 lines seem to cause problems when scaling the sprite or entering fullscreen, they are now in timeout
+        // maxWidth *= this._renderer.gl.canvas.width / this._renderer.getNativeSize()[0]; // Shrink the max width if the drawable is scaled up
+        
+        // maxWidth /= scale || 1;
 
-        maxWidth /= scale || 1;
         this._lines = this.textWrapper.wrapText(maxWidth, this._text, this.style.FONT_SIZE, this.style.FONT); // Calculate the canvas-space size of the text
 
         this._size[0] = maxWidth;
@@ -138,12 +140,11 @@ class TextCostumeSkin extends Skin {
             this._reflowLines(scale);
         } // Resize the canvas to the correct screen-space size
 
-
+        // console.log(this._size);
         this._canvas.width = Math.ceil(this._size[0] * scale);
         this._canvas.height = Math.ceil(this._size[1] * scale);
 
         this._restyleCanvas(); // Reset the transform before clearing to ensure 100% clearage
-
 
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
@@ -210,7 +211,7 @@ class TextCostumeSkin extends Skin {
 
             this._renderText(requestedScale);
 
-            if (this._canvas.width === 0 || this._canvas.height === 0) return _get(_getPrototypeOf(TextCostumeSkin.prototype), "getTexture", this).call(this);
+            if (this._canvas.width === 0 || this._canvas.height === 0) return super.getTexture();
             this._textureDirty = false;
 
             const context = this._canvas.getContext('2d');
