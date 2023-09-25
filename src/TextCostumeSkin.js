@@ -204,7 +204,16 @@ class TextCostumeSkin extends Skin {
     getTexture(scale) {
         // The texture only ever gets uniform scale. Take the larger of the two axes.
         const scaleMax = scale ? Math.max(Math.abs(scale[0]), Math.abs(scale[1])) : 100;
-        const requestedScale = scaleMax / 100; // If we already rendered the text at this scale, we can skip re-rendering it.
+        let requestedScale = scaleMax / 100; // If we already rendered the text at this scale, we can skip re-rendering it.
+
+        const customConfig = this._renderer.customRenderConfig.textCostumeResolution;
+        if (customConfig.fixed) {
+            requestedScale = customConfig.value;
+        } else if (customConfig.capped) {
+            if (requestedScale > customConfig.value) {
+                requestedScale = customConfig.value;
+            }
+        }
 
         if (this._textureDirty || this._renderedScale !== requestedScale) {
             if (this._renderedScale !== requestedScale) this._textDirty = true;
