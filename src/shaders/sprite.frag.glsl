@@ -48,7 +48,7 @@ uniform float u_opaque;
 uniform float u_saturation;
 #endif // ENABLE_saturation
 #ifdef ENABLE_tintColor
-uniform float u_tintColor;
+uniform highp float u_tintColor;
 #endif // ENABLE_tintColor
 
 #ifdef DRAW_MODE_line
@@ -128,10 +128,10 @@ vec3 convertHSV2RGB(vec3 hsv)
 	return rgb * c + hsv.z - c;
 }
 
-vec3 decimalToRGB(float decimalColor) {
-	float blue = mod(decimalColor, 256.0) / 255.0;
-	float green = mod(floor(decimalColor / 256.0), 256.0) / 255.0;
-	float red = mod(floor(decimalColor / 65536.0), 256.0) / 255.0;
+vec3 decimalToRGB(highp float decimalColor) {
+	highp float blue = mod(decimalColor, 256.0) / 255.0;
+	highp float green = mod(floor(decimalColor / 256.0), 256.0) / 255.0;
+	highp float red = mod(floor(decimalColor / 65536.0), 256.0) / 255.0;
 
 	return vec3(red, green, blue);
 }
