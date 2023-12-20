@@ -261,7 +261,7 @@ class RenderWebGL extends EventEmitter {
 
         this.useHighQualityRender = true;
 
-        this.offscreenTouching = false;
+        this.offscreenTouching = !false;
 
         this.dirty = true;
 
