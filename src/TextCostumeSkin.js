@@ -171,7 +171,7 @@ class TextCostumeSkin extends Skin {
                 const stops = 12;
 
                 for (let i = 0; i < stops; i++) {
-                    gradient.addColorStop(i / stops, `hsl(${360 * i / stops}, 100%, 50%)`));
+                    gradient.addColorStop(i / stops, `hsl(${360 * i / stops}, 100%, 50%)`);
                 }
 
                 ctx.fillStyle = gradient;
