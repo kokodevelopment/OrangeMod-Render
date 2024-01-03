@@ -50,6 +50,7 @@ class TextWrapper {
         let lastPosition = 0;
         let nextBreak;
         let currentLine = null;
+        let width = 0;
         const lines = [];
 
         while ((nextBreak = breaker.nextBreak())) {
@@ -72,6 +73,7 @@ class TextWrapper {
                         if ((currentLine === null) || (proposedLineWidth <= maxWidth)) {
                             // first cluster of a new line or the cluster fits
                             currentLine = proposedLine;
+                            width = Math.max(proposedLineWidth, width);
                         } else {
                             // no more can fit
                             lines.push(currentLine);
@@ -81,7 +83,10 @@ class TextWrapper {
                     }
                 } else {
                     // The next word can fit on the next line. Finish the current line and move on.
-                    if (currentLine !== null) lines.push(currentLine);
+                    if (currentLine !== null) {
+                        width = Math.max(wordWidth, width);
+                        lines.push(currentLine);
+                    }
                     currentLine = word;
                 }
             } else {
@@ -91,7 +96,10 @@ class TextWrapper {
 
             // Did we find a \n or similar?
             if (nextBreak.required) {
-                if (currentLine !== null) lines.push(currentLine);
+                if (currentLine !== null) {
+                    width = Math.max(proposedLineWidth, width);
+                    lines.push(currentLine);
+                }
                 currentLine = null;
             }
 
@@ -100,9 +108,13 @@ class TextWrapper {
 
         currentLine = currentLine || '';
         if (currentLine.length > 0 || lines.length === 0) {
+            const lastWidth = this._measurementProvider.measureText(currentLine)
+            width = Math.max(lastWidth, width);
             lines.push(currentLine);
         }
 
+        // man i love javascript
+        lines.width = width;
         this._cache[cacheKey] = lines;
         this._measurementProvider.endMeasurementSession(measurementSession);
         return lines;
