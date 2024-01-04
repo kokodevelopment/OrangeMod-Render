@@ -158,11 +158,7 @@ class TextCostumeSkin extends Skin {
         ctx.fillStyle = this.style.COLOR;
         ctx.font = `${this.style.FONT_SIZE}px ${this.style.FONT}, sans-serif`;
         const lines = this._lines;
-
-        let maxWidth = this.style.MAX_LINE_WIDTH;
-        // upscale maxWidth to canvas units
-        maxWidth *= this._renderer.gl.canvas.width / this._renderer.getNativeSize()[0];
-        maxWidth /= scale;
+        const textWidth = this.style.MAX_LINE_WIDTH / scale
 
         for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
             const line = lines[lineNumber];
@@ -173,11 +169,11 @@ class TextCostumeSkin extends Skin {
                 xOffset = (this._size[0] / 2) - (lineWidth / 2);
             }
             if (this.style.ALIGN === 'right') {
-                this._offsetX = (this.style.MAX_LINE_WIDTH / 2) - (this._size[0] / 2);
+                this._offsetX = (textWidth / 2) - (this._size[0] / 2);
                 xOffset = this._size[0] - lineWidth;
             }
             if (this.style.ALIGN === 'left') {
-                this._offsetX = -((this.style.MAX_LINE_WIDTH / 2) - (this._size[0] / 2));
+                this._offsetX = -((textWidth / 2) - (this._size[0] / 2));
             }
             let yOffset = this.style.LINE_HEIGHT * lineNumber + FontHeightRatio * this.style.FONT_SIZE + this.style.VERTICAL_PADDING;
 
