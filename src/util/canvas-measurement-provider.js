@@ -36,6 +36,9 @@ class CanvasMeasurementProvider {
      */
     measureText (text) {
         if (!this._cache[text]) {
+            // patch to measure emojis aswellwhen making measurements
+            // firefox seems to handle this extra character just fine
+            if (navigator.userAgent.includes('Firefox')) text += ' ';
             this._cache[text] = this._ctx.measureText(text).actualBoundingBoxRight;
         }
         return this._cache[text];

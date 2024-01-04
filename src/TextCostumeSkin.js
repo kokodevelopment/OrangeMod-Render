@@ -75,7 +75,7 @@ class TextCostumeSkin extends Skin {
     setTextAndStyle (textState) {
         /** @todo dont add an extra space here just to try and fix firefox */
         // eslint-disable-next-line prefer-template
-        this._text = textState.text + ' ';
+        this._text = textState.text;
         this.style.FONT = textState.font;
         this.style.COLOR = textState.color;
         this.style.MAX_LINE_WIDTH = textState.maxWidth;
@@ -173,11 +173,11 @@ class TextCostumeSkin extends Skin {
                 xOffset = (this._size[0] / 2) - (lineWidth / 2);
             }
             if (this.style.ALIGN === 'right') {
-                this._offsetX = (maxWidth / 2) - (this._size[0] / 2);
+                this._offsetX = (this.style.MAX_LINE_WIDTH / 2) - (this._size[0] / 2);
                 xOffset = this._size[0] - lineWidth;
             }
             if (this.style.ALIGN === 'left') {
-                this._offsetX = -((maxWidth / 2) - (this._size[0] / 2));
+                this._offsetX = -((this.style.MAX_LINE_WIDTH / 2) - (this._size[0] / 2));
             }
             let yOffset = this.style.LINE_HEIGHT * lineNumber + FontHeightRatio * this.style.FONT_SIZE + this.style.VERTICAL_PADDING;
 
