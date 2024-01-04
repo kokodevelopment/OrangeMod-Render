@@ -103,11 +103,11 @@ class TextCostumeSkin extends Skin {
      * Update the array of wrapped lines and the text dimensions.
      * @param {number} scale The scale to render the text at
      */
-    _reflowLines (scale = 1) {
+    _reflowLines () {
         let maxWidth = this.style.MAX_LINE_WIDTH;
         // upscale maxWidth to canvas units
         maxWidth *= this._renderer.gl.canvas.width / this._renderer.getNativeSize()[0];
-        maxWidth /= scale;
+        // maxWidth /= scale;
         // ensure font and font size are applied for the text wraper
         this._restyleCanvas();
         // get all lines in this text + the width of the text(s)
