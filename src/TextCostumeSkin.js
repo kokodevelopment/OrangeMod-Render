@@ -32,6 +32,9 @@ class TextCostumeSkin extends Skin {
         /** @type {number} */
         this._renderedScale = 0;
 
+        /** @type {number} */
+        this._offsetX = 0;
+
         /** @type {Array<string>} */
         this._lines = [];
 
@@ -67,7 +70,7 @@ class TextCostumeSkin extends Skin {
     }
 
     /**
-     * @return {Array<number>} the dimensions, in Scratch units, of this skin.
+     * @param {Object} textState the text state from vm to apply to our style list
      */
     setTextAndStyle (textState) {
         /** @todo dont add an extra space here just to try and fix firefox */
@@ -105,7 +108,10 @@ class TextCostumeSkin extends Skin {
         // upscale maxWidth to canvas units
         maxWidth *= this._renderer.gl.canvas.width / this._renderer.getNativeSize()[0];
         maxWidth /= scale;
-        const lines = this.textWrapper.wrapText(maxWidth, this._text, this.style.FONT_SIZE, this.style.FONT); // Calculate the canvas-space size of the text
+        // ensure font and font size are applied for the text wraper
+        this._restyleCanvas();
+        // get all lines in this text + the width of the text(s)
+        const lines = this.textWrapper.wrapText(maxWidth, this._text);
 
         this._lines = lines;
         this._size[0] = lines.width + (this.style.VERTICAL_PADDING * 2);
@@ -153,12 +159,26 @@ class TextCostumeSkin extends Skin {
         ctx.font = `${this.style.FONT_SIZE}px ${this.style.FONT}, sans-serif`;
         const lines = this._lines;
 
+        let maxWidth = this.style.MAX_LINE_WIDTH;
+        // upscale maxWidth to canvas units
+        maxWidth *= this._renderer.gl.canvas.width / this._renderer.getNativeSize()[0];
+        maxWidth /= scale;
+
         for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
             const line = lines[lineNumber];
             const lineWidth = this.measurementProvider.measureText(line);
             let xOffset = 0;
-            if (this.style.ALIGN === 'center') xOffset = this._size[0] / 2 - lineWidth / 2;
-            if (this.style.ALIGN === 'right') xOffset = this._size[0] - lineWidth;
+            if (this.style.ALIGN === 'center') {
+                this._offsetX = 0;
+                xOffset = (this._size[0] / 2) - (lineWidth / 2);
+            }
+            if (this.style.ALIGN === 'right') {
+                this._offsetX = (maxWidth / 2) - (this._size[0] / 2);
+                xOffset = this._size[0] - lineWidth;
+            }
+            if (this.style.ALIGN === 'left') {
+                this._offsetX = -((maxWidth / 2) - (this._size[0] / 2));
+            }
             let yOffset = this.style.LINE_HEIGHT * lineNumber + FontHeightRatio * this.style.FONT_SIZE + this.style.VERTICAL_PADDING;
 
             if (this.style.STROKE_WIDTH > 0) {
@@ -244,6 +264,9 @@ class TextCostumeSkin extends Skin {
         }
 
         return this._size;
+    }
+    get offset () {
+        return [this._offsetX, 0];
     }
     get maxScale () {
         return 10; // = 1000% size maximum. Needed to override default clamping behavior when setting size

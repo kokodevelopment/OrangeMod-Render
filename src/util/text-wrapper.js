@@ -38,7 +38,7 @@ class TextWrapper {
     wrapText (maxWidth, text) {
         // Normalize to canonical composition (see Unicode Standard Annex (UAX) #15)
         text = text.normalize();
-
+console.log(this._measurementProvider._ctx.font);
         const cacheKey = `${maxWidth}-${text}`;
         if (this._cache[cacheKey]) {
             return this._cache[cacheKey];
