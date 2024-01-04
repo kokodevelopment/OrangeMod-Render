@@ -77,29 +77,27 @@ class TextWrapper {
                         } else {
                             // no more can fit
                             lines.push(currentLine);
+                            const clusterWidth = this._measurementProvider.measureText(cluster);
+                            width = Math.max(clusterWidth, width);
                             currentLine = cluster;
                         }
                         lastCluster = nextCluster;
                     }
                 } else {
                     // The next word can fit on the next line. Finish the current line and move on.
-                    if (currentLine !== null) {
-                        width = Math.max(wordWidth, width);
-                        lines.push(currentLine);
-                    }
+                    if (currentLine !== null) lines.push(currentLine);
+                    width = Math.max(wordWidth, width);
                     currentLine = word;
                 }
             } else {
                 // The next word fits on this line. Just keep going.
+                width = Math.max(proposedLineWidth, width);
                 currentLine = proposedLine;
             }
 
             // Did we find a \n or similar?
             if (nextBreak.required) {
-                if (currentLine !== null) {
-                    width = Math.max(proposedLineWidth, width);
-                    lines.push(currentLine);
-                }
+                if (currentLine !== null) lines.push(currentLine);
                 currentLine = null;
             }
 
@@ -107,11 +105,7 @@ class TextWrapper {
         }
 
         currentLine = currentLine || '';
-        if (currentLine.length > 0 || lines.length === 0) {
-            const lastWidth = this._measurementProvider.measureText(currentLine)
-            width = Math.max(lastWidth, width);
-            lines.push(currentLine);
-        }
+        if (currentLine.length > 0 || lines.length === 0) lines.push(currentLine);
 
         // man i love javascript
         lines.width = width;
