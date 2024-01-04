@@ -70,7 +70,9 @@ class TextCostumeSkin extends Skin {
      * @return {Array<number>} the dimensions, in Scratch units, of this skin.
      */
     setTextAndStyle (textState) {
-        this._text = textState.text;
+        /** @todo dont add an extra space here just to try and fix firefox */
+        // eslint-disable-next-line prefer-template
+        this._text = textState.text + ' ';
         this.style.FONT = textState.font;
         this.style.COLOR = textState.color;
         this.style.MAX_LINE_WIDTH = textState.maxWidth;
