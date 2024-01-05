@@ -103,11 +103,10 @@ class TextCostumeSkin extends Skin {
      * Update the array of wrapped lines and the text dimensions.
      * @param {number} scale The scale to render the text at
      */
-    _reflowLines (scale = 1) {
+    _reflowLines () {
         let maxWidth = this.style.MAX_LINE_WIDTH;
         // upscale maxWidth to canvas units
         maxWidth *= this._renderer.gl.canvas.width / this._renderer.getNativeSize()[0];
-        maxWidth /= scale;
         // maxWidth /= scale;
         // ensure font and font size are applied for the text wraper
         this._restyleCanvas();
@@ -159,7 +158,7 @@ class TextCostumeSkin extends Skin {
         ctx.fillStyle = this.style.COLOR;
         ctx.font = `${this.style.FONT_SIZE}px ${this.style.FONT}, sans-serif`;
         const lines = this._lines;
-        const maxWidth = this.style.MAX_LINE_WIDTH;
+        const maxWidth = this.style.MAX_LINE_WIDTH * scale;
         const textWidth = this._size[0] * scale;
         const edgeShift = (maxWidth / 2) - (textWidth / 2);
 
@@ -201,8 +200,7 @@ class TextCostumeSkin extends Skin {
             ctx.fillText(line, xOffset, yOffset);
         }
 
-        const center = [this._size[0] / 2, FontHeightRatio * this.style.FONT_SIZE];
-        // Uncommenting these lines moves the text when alignment is changed
+        const center = [this._size[0] / 2, FontHeightRatio * this.style.FONT_SIZE]; // // Uncommenting these lines moves the text when alignment is changed
         // if (this.style.ALIGN === 'left') {
         //     center[0] = 0;
         // }
