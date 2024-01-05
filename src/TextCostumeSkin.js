@@ -158,9 +158,7 @@ class TextCostumeSkin extends Skin {
         ctx.fillStyle = this.style.COLOR;
         ctx.font = `${this.style.FONT_SIZE}px ${this.style.FONT}, sans-serif`;
         const lines = this._lines;
-        const maxWidth = this.style.MAX_LINE_WIDTH * scale;
-        const textWidth = this._size[0] * scale;
-        const edgeShift = (maxWidth / 2) - (textWidth / 2);
+        const textWidth = this.style.MAX_LINE_WIDTH;
 
         for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
             const line = lines[lineNumber];
@@ -171,11 +169,11 @@ class TextCostumeSkin extends Skin {
                 xOffset = (this._size[0] / 2) - (lineWidth / 2);
             }
             if (this.style.ALIGN === 'right') {
-                this._offsetX = edgeShift;
+                this._offsetX = ((textWidth / 2) - (this._size[0] / 2)) / scale;
                 xOffset = this._size[0] - lineWidth;
             }
             if (this.style.ALIGN === 'left') {
-                this._offsetX = -edgeShift;
+                this._offsetX = -((textWidth / 2) - (this._size[0] / 2)) / scale;
             }
             let yOffset = this.style.LINE_HEIGHT * lineNumber + FontHeightRatio * this.style.FONT_SIZE + this.style.VERTICAL_PADDING;
 
@@ -219,8 +217,7 @@ class TextCostumeSkin extends Skin {
     getTexture (scale) {
         // The texture only ever gets uniform scale. Take the larger of the two axes.
         const scaleMax = scale ? Math.max(Math.abs(scale[0]), Math.abs(scale[1])) : 100;
-        // If we already rendered the text at this scale, we can skip re-rendering it.
-        let requestedScale = scaleMax / 100;
+        let requestedScale = scaleMax / 100; // If we already rendered the text at this scale, we can skip re-rendering it.
 
         const customConfig = this._renderer.customRenderConfig.textCostumeResolution;
         if (customConfig.fixed) {
