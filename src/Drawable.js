@@ -447,8 +447,8 @@ class Drawable {
         const rotation11 = this._rotationMatrix[5];
         const adjusted0 = this._rotationAdjusted[0];
         const adjusted1 = this._rotationAdjusted[1];
-        const position0 = this._position[0] + this.skin.offset[0];
-        const position1 = this._position[1] + this.skin.offset[1];
+        const position0 = this._position[0];
+        const position1 = this._position[1];
 
         // Commented assignments show what the values are when the matrix was
         // instantiated. Those values will never change so they do not need to
