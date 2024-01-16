@@ -48,7 +48,7 @@
     "webpack-dev-server": "3.11.2"
   },
   "peerDependencies": {
-    "scratch-render-fonts": "^1.0.0-prerelease"
+    "scratch-render-fonts": "github:PenguinMod/penguinmod-render-fonts#master"
   },
   "dependencies": {
     "grapheme-breaker": "0.3.2",
