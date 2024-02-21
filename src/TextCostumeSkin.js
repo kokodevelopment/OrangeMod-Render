@@ -7,14 +7,14 @@ const Skin = require('./Skin');
 const FontHeightRatio = 0.9; // Height, in Scratch pixels, of the text, as a proportion of the font's size
 
 class TextCostumeSkin extends Skin {
-  /**
+    /**
    * Create a new text costume skin.
    * @param {!int} id - The ID for this Skin.
    * @param {!RenderWebGL} renderer - The renderer which will use this skin.
    * @constructor
    * @extends Skin
    */
-    constructor(id, renderer) {
+    constructor (id, renderer) {
         super(id);
 
         /** @type {RenderWebGL} */
@@ -37,8 +37,8 @@ class TextCostumeSkin extends Skin {
 
         /** @type {object} */
         this._textAreaSize = {
-        width: 0,
-        height: 0
+            width: 0,
+            height: 0
         };
 
         /** @type {boolean} */
@@ -54,7 +54,7 @@ class TextCostumeSkin extends Skin {
     /**
      * Dispose of this object. Do not use it after calling this method.
      */
-    dispose() {
+    dispose () {
         if (this._texture) {
             this._renderer.gl.deleteTexture(this._texture);
 
@@ -69,7 +69,7 @@ class TextCostumeSkin extends Skin {
     /**
      * @return {Array<number>} the dimensions, in Scratch units, of this skin.
      */
-    setTextAndStyle(textState) {
+    setTextAndStyle (textState) {
         this._text = textState.text;
         this.style.FONT = textState.font;
         this.style.COLOR = textState.color;
@@ -90,15 +90,15 @@ class TextCostumeSkin extends Skin {
     /**
      * Re-style the canvas after resizing it. This is necessary to ensure proper text measurement.
      */
-    _restyleCanvas() {
+    _restyleCanvas () {
         this._canvas.getContext('2d').font = `${this.style.FONT_SIZE}px ${this.style.FONT}, sans-serif`;
     }
 
     /**
      * Update the array of wrapped lines and the text dimensions.
      */
-    _reflowLines(scale) {
-        let maxWidth = this.style.MAX_LINE_WIDTH; // Max width is in "native scratch units", convert to raw pixels
+    _reflowLines (scale) {
+        const maxWidth = this.style.MAX_LINE_WIDTH; // Max width is in "native scratch units", convert to raw pixels
 
         // pm: these 2 lines seem to cause problems when scaling the sprite or entering fullscreen, they are now in timeout
         // maxWidth *= this._renderer.gl.canvas.width / this._renderer.getNativeSize()[0]; // Shrink the max width if the drawable is scaled up
@@ -127,13 +127,13 @@ class TextCostumeSkin extends Skin {
     }
 
     get height () {
-        return this._size[1]
+        return this._size[1];
     }
     /**
      * Render this text text at a certain scale, using the current parameters, to the canvas.
      * @param {number} scale The scale to render the text at
      */
-    _renderText(scale) {
+    _renderText (scale) {
         const ctx = this._canvas.getContext('2d');
 
         if (this._textDirty) {
@@ -153,7 +153,7 @@ class TextCostumeSkin extends Skin {
         ctx.fill(); // Draw each line of text
 
         ctx.fillStyle = this.style.COLOR;
-        ctx.font = "".concat(this.style.FONT_SIZE, "px ").concat(this.style.FONT, ", sans-serif");
+        ctx.font = ''.concat(this.style.FONT_SIZE, 'px ').concat(this.style.FONT, ', sans-serif');
         const lines = this._lines;
 
         for (let lineNumber = 0; lineNumber < lines.length; lineNumber++) {
@@ -165,21 +165,21 @@ class TextCostumeSkin extends Skin {
             let yOffset = this.style.LINE_HEIGHT * lineNumber + FontHeightRatio * this.style.FONT_SIZE + this.style.VERTICAL_PADDING;
 
             if (this.style.STROKE_WIDTH > 0) {
-            yOffset += this.style.STROKE_WIDTH;
-            ctx.lineWidth = this.style.STROKE_WIDTH * 2;
-            ctx.strokeStyle = this.style.STROKE_COLOR;
-            ctx.strokeText(line, xOffset, yOffset);
+                yOffset += this.style.STROKE_WIDTH;
+                ctx.lineWidth = this.style.STROKE_WIDTH * 2;
+                ctx.strokeStyle = this.style.STROKE_COLOR;
+                ctx.strokeText(line, xOffset, yOffset);
             }
 
             if (this.style.RAINBOW) {
-            const gradient = ctx.createLinearGradient(xOffset, 0, xOffset + lineWidth, 0);
-            const stops = 12;
+                const gradient = ctx.createLinearGradient(xOffset, 0, xOffset + lineWidth, 0);
+                const stops = 12;
 
-            for (let i = 0; i < stops; i++) {
-                gradient.addColorStop(i / stops, "hsl(".concat(360 * i / stops, ", 100%, 50%)"));
-            }
+                for (let i = 0; i < stops; i++) {
+                    gradient.addColorStop(i / stops, 'hsl('.concat(360 * i / stops, ', 100%, 50%)'));
+                }
 
-            ctx.fillStyle = gradient;
+                ctx.fillStyle = gradient;
             }
 
             ctx.fillText(line, xOffset, yOffset);
@@ -201,7 +201,7 @@ class TextCostumeSkin extends Skin {
      * @param {Array<number>} scale - The scaling factors to be used, each in the [0,100] range.
      * @return {WebGLTexture} The GL texture representation of this skin when drawing at the given scale.
      */
-    getTexture(scale) {
+    getTexture (scale) {
         // The texture only ever gets uniform scale. Take the larger of the two axes.
         const scaleMax = scale ? Math.max(Math.abs(scale[0]), Math.abs(scale[1])) : 100;
         let requestedScale = scaleMax / 100; // If we already rendered the text at this scale, we can skip re-rendering it.
@@ -229,11 +229,11 @@ class TextCostumeSkin extends Skin {
             const gl = this._renderer.gl;
 
             if (this._texture === null) {
-            const textureOptions = {
-                auto: false,
-                wrap: gl.CLAMP_TO_EDGE
-            };
-            this._texture = twgl.createTexture(gl, textureOptions);
+                const textureOptions = {
+                    auto: false,
+                    wrap: gl.CLAMP_TO_EDGE
+                };
+                this._texture = twgl.createTexture(gl, textureOptions);
             }
 
             this._setTexture(textureData);
@@ -241,14 +241,14 @@ class TextCostumeSkin extends Skin {
 
         return this._texture;
     }
-    get size() {
+    get size () {
         if (this._textDirty) {
             this._reflowLines(this._renderedScale);
         }
 
         return this._size;
     }
-    get maxScale() {
+    get maxScale () {
         return 10; // = 1000% size maximum. Needed to override default clamping behavior when setting size
     }
 }

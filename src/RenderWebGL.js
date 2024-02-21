@@ -1667,7 +1667,8 @@ class RenderWebGL extends EventEmitter {
             this._drawThese([drawableID], ShaderManager.DRAW_MODE.straightAlpha, projection,
                 {
                     // Don't apply the ghost effect. TODO: is this an intentional design decision?
-                    effectMask: ~ShaderManager.EFFECT_INFO.ghost.mask,
+                    // gsa: i wonder how deathly it would be to remove this
+                    // effectMask: ~ShaderManager.EFFECT_INFO.ghost.mask,
                     // We're doing this in screen-space, so the framebuffer dimensions should be those of the canvas in
                     // screen-space. This is used to ensure SVG skins are rendered at the proper resolution.
                     framebufferWidth: canvas.width,
