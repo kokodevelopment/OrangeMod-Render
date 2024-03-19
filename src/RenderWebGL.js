@@ -2525,7 +2525,7 @@ class RenderWebGL extends EventEmitter {
     }
 
     getPenDrawableId () {
-        return this._allDrawables.findIndex(drawable => drawable instanceof PenSkin);
+        return this._allDrawables.findIndex(drawable => drawable._skin._id === this._penSkinId);
     }
     
     /**
