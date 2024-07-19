@@ -129,9 +129,9 @@ class RenderWebGL extends EventEmitter {
                 xrCompatible: true
             };
             return !!(
-                optCanvas.getContext('webgl', options) ||
+                optCanvas.getContext('webgl2', options) ||
                 optCanvas.getContext('experimental-webgl', options) ||
-                optCanvas.getContext('webgl2', options)
+                optCanvas.getContext('webgl', options)
             );
         } catch (e) {
             return false;
@@ -155,8 +155,8 @@ class RenderWebGL extends EventEmitter {
         // getWebGLContext = try WebGL 1.0 only
         // getContext = try WebGL 2.0 and if that doesn't work, try WebGL 1.0
         // getWebGLContext || getContext = try WebGL 1.0 and if that doesn't work, try WebGL 2.0
-        return twgl.getWebGLContext(canvas, contextAttribs) ||
-            twgl.getContext(canvas, contextAttribs);
+        return twgl.getContext(canvas, contextAttribs) ||
+            twgl.getWebGLContext(canvas, contextAttribs);
     }
 
     /**
