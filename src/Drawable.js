@@ -330,6 +330,52 @@ class Drawable {
     }
 
     /**
+     * If rotationCenterDirty or skinScaleDirty is dirty
+     * then set _calculateTransform first
+     * because _rotationAdjusted and _skinScale
+     * needs to call _calculateTransform before using
+     * @returns {boolean} transform before checking the viewport
+     */
+    transformBeforeCheckViewport () {
+        return this._rotationCenterDirty || this._skinScaleDirty;
+    }
+
+    /**
+     * check drawable is in viewport
+     * @param {number} halfNativeSizeX viewport width
+     * @param {number} halfNativeSizeY viewport height
+     * @returns {boolean} Is it in viewport
+     */
+    inViewport (halfNativeSizeX, halfNativeSizeY) {
+        // position of this texture
+        const positionX = ~~(this._position[0] + 0.5 - this._rotationAdjusted[0]);
+        const positionY = ~~(this._position[1] + 0.5 - this._rotationAdjusted[1]);
+        // Half the size
+        const halfSizeX = ~~((this._skinScale[0] / 2) + 0.5);
+        const halfSizeY = ~~((this._skinScale[1] / 2) + 0.5);
+
+        // The leftTop and rightBottomX of the sprite must be enlarged,
+        // otherwise there will be problems when rotating
+        const maxHalfSize = Math.max(halfSizeX, halfSizeY);
+
+        const leftTopX = positionX - halfSizeX - maxHalfSize;
+        // Y-axis is reversed
+        const leftTopY = positionY + halfSizeY + maxHalfSize;
+
+        const rightBottomX = positionX + halfSizeX + maxHalfSize;
+        // Y-axis is reversed
+        const rightBottomY = positionY - halfSizeY - maxHalfSize;
+
+        if (rightBottomX < -halfNativeSizeX || rightBottomY > halfNativeSizeY) {
+            return false;
+        }
+        if (leftTopX > halfNativeSizeX || leftTopY < -halfNativeSizeY) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Calculate the transform to use when rendering this Drawable.
      * @private
      */
