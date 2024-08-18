@@ -17,7 +17,7 @@ const TextCostumeSkin = require('./TextCostumeSkin');
 const EffectTransform = require('./EffectTransform');
 const CanvasMeasurementProvider = require('./util/canvas-measurement-provider');
 const log = require('./util/log');
-const runtime = window.vm.runtime; // Quite lengthy to do it this way, but oh well.
+const runtime = { runtimeOptions: {} };
 
 const __isTouchingDrawablesPoint = twgl.v3.create();
 const __candidatesBounds = new Rectangle();
