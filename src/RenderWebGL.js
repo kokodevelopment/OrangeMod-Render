@@ -17,7 +17,6 @@ const TextCostumeSkin = require('./TextCostumeSkin');
 const EffectTransform = require('./EffectTransform');
 const CanvasMeasurementProvider = require('./util/canvas-measurement-provider');
 const log = require('./util/log');
-const runtime = this.runtime;
 
 const __isTouchingDrawablesPoint = twgl.v3.create();
 const __candidatesBounds = new Rectangle();
@@ -102,6 +101,7 @@ const lazilyLoadTextWrapper = () => {
     return _TextWrapper;
 };
 
+let runtime = undefined; // Defined Later
 let _stylesheet;
 const loadStyles = () => {
     if (!_stylesheet) {
@@ -2279,6 +2279,7 @@ class RenderWebGL extends EventEmitter {
             const drawable = this._allDrawables[drawableID];
 
             const uniforms = {};
+            if (runtime === undefined) runtime = window.vm?.runtime; // this seems to be the only way to get the Runtime
             console.log("renderer", runtime);
             const renderOffscreen = runtime?.runtimeOptions.oobRendering || true;
             if (!renderOffscreen) {
