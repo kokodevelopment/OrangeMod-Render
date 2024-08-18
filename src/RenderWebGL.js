@@ -2279,8 +2279,10 @@ class RenderWebGL extends EventEmitter {
             const drawable = this._allDrawables[drawableID];
 
             const uniforms = {};
+            let renderOffscreen = true;
             if (runtime === undefined) runtime = window.vm?.runtime; // this seems to be the only way to get the Runtime
-            const renderOffscreen = runtime?.runtimeOptions.oobRendering || true;
+            if (runtime === undefined) renderOffscreen = true;
+            else renderOffscreen = runtime.runtimeOptions.oobRendering;
             console.log(renderOffscreen)
             if (!renderOffscreen) {
                 if (drawMode === ShaderManager.DRAW_MODE.default && drawable.skin) {
