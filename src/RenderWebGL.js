@@ -2283,7 +2283,6 @@ class RenderWebGL extends EventEmitter {
             if (runtime === undefined) runtime = window.vm?.runtime; // this seems to be the only way to get the Runtime
             if (runtime === undefined) renderOffscreen = true;
             else renderOffscreen = runtime.runtimeOptions.oobRendering;
-            console.log(renderOffscreen)
             if (!renderOffscreen) {
                 if (drawMode === ShaderManager.DRAW_MODE.default && drawable.skin) {
                     // If rotationCenterDirty or skinScaleDirty is dirty, then set _calculateTransform first
