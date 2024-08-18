@@ -17,6 +17,8 @@ const TextCostumeSkin = require('./TextCostumeSkin');
 const EffectTransform = require('./EffectTransform');
 const CanvasMeasurementProvider = require('./util/canvas-measurement-provider');
 const log = require('./util/log');
+const test = require('PenguinMod-Vm');
+console.log("renderer-vm-check", test)
 const runtime = {runtimeOptions: {oobRendering: true}};
 
 const __isTouchingDrawablesPoint = twgl.v3.create();
