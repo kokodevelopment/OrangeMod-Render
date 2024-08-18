@@ -17,9 +17,7 @@ const TextCostumeSkin = require('./TextCostumeSkin');
 const EffectTransform = require('./EffectTransform');
 const CanvasMeasurementProvider = require('./util/canvas-measurement-provider');
 const log = require('./util/log');
-const test = this.runtime;
-console.log("renderer-runtime-check", test)
-const runtime = {runtimeOptions: {oobRendering: true}};
+const runtime = this.runtime;
 
 const __isTouchingDrawablesPoint = twgl.v3.create();
 const __candidatesBounds = new Rectangle();
@@ -2281,7 +2279,8 @@ class RenderWebGL extends EventEmitter {
             const drawable = this._allDrawables[drawableID];
 
             const uniforms = {};
-            const renderOffscreen = runtime.runtimeOptions.oobRendering;
+            console.log("renderer", runtime);
+            const renderOffscreen = runtime?.runtimeOptions.oobRendering || true;
             if (!renderOffscreen) {
                 if (drawMode === ShaderManager.DRAW_MODE.default && drawable.skin) {
                     // If rotationCenterDirty or skinScaleDirty is dirty, then set _calculateTransform first
