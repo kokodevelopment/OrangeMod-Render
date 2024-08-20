@@ -2518,6 +2518,7 @@ class RenderWebGL extends EventEmitter {
             const drawable = this._allDrawables[drawableID];
 
             const uniforms = {};
+            console.log(0, drawable.uniformApplied, !this.renderOffscreen);
             if (!this.renderOffscreen && drawable.uniformApplied) {
                 console.log(1, drawable.uniformApplied, !this.renderOffscreen);
                 if (drawMode === ShaderManager.DRAW_MODE.default && drawable.skin) {
