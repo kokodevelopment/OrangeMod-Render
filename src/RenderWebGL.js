@@ -2586,15 +2586,15 @@ class RenderWebGL extends EventEmitter {
             }
 
             console.log(2, drawable.uniformApplied, !this.renderOffscreen);
-            if (this.renderOffscreen && !drawable.uniformApplied) {
+            if (!this.renderOffscreen && drawable.uniformApplied) {
+                Object.assign(uniforms, drawable.getUniforms());
+            } else {
                 drawable.uniformApplied = true;
                 Object.assign(
                     uniforms,
                     drawable.skin.getUniforms(drawableScale),
                     drawable.getUniforms()
                 );
-            } else {
-                Object.assign(uniforms, drawable.getUniforms());
             }
 
             // Apply extra uniforms after the Drawable's, to allow overwriting.
