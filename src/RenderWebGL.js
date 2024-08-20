@@ -2518,7 +2518,7 @@ class RenderWebGL extends EventEmitter {
             const drawable = this._allDrawables[drawableID];
 
             const uniforms = {};
-            if (!this.renderOffscreen) {
+            if (!this.renderOffscreen && drawable.uniformApplied) {
                 if (drawMode === ShaderManager.DRAW_MODE.default && drawable.skin) {
                     // If rotationCenterDirty or skinScaleDirty is dirty, then set _calculateTransform first
                     // because _rotationAdjusted and _skinScale    needs to call _calculateTransform before using
@@ -2584,7 +2584,8 @@ class RenderWebGL extends EventEmitter {
                 });
             }
 
-            if (this.renderOffscreen) {
+            if (this.renderOffscreen && !drawable.uniformApplied) {
+                drawable.uniformApplied = true;
                 Object.assign(
                     uniforms,
                     drawable.skin.getUniforms(drawableScale),
