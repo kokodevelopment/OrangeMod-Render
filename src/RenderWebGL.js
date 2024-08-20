@@ -2584,7 +2584,7 @@ class RenderWebGL extends EventEmitter {
                 });
             }
 
-            if (renderOffscreen) {
+            if (this.renderOffscreen) {
                 Object.assign(
                     uniforms,
                     drawable.skin.getUniforms(drawableScale),
