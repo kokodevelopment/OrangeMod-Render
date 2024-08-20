@@ -2514,21 +2514,17 @@ class RenderWebGL extends EventEmitter {
                 });
             }
 
-            /*if (!this.renderOffscreen && drawable.uniformApplied) Object.assign(uniforms, drawable.getUniforms());
-            else {*/
-                drawable.uniformApplied = true;
-                Object.assign(
-                    uniforms, drawable.skin.getUniforms(drawableScale), drawable.getUniforms()
-                );
-            //}
+            drawable.uniformApplied = true;
+            Object.assign(
+                uniforms, drawable.skin.getUniforms(drawableScale), drawable.getUniforms()
+            );
 
             // Apply extra uniforms after the Drawable's, to allow overwriting.
             if (opts.extraUniforms) Object.assign(uniforms, opts.extraUniforms);
 
             if (uniforms.u_skin) {
                 twgl.setTextureParameters(gl, uniforms.u_skin, {
-                    minMag: drawable.skin.useNearest(drawableScale, drawable)
-                        ? gl.NEAREST : gl.LINEAR
+                    minMag: drawable.skin.useNearest(drawableScale, drawable) ? gl.NEAREST : gl.LINEAR
                 });
             }
 
