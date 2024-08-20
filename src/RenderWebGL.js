@@ -1837,10 +1837,8 @@ class RenderWebGL extends EventEmitter {
 
         // Make a new bufferInfo since this._queryBufferInfo is limited to 480x360
         const bufferInfo = twgl.createFramebufferInfo(
-            gl,
-            [{format: gl.RGBA}],
-            clampedWidth,
-            clampedHeight
+            gl, [{format: gl.RGBA}],
+            clampedWidth, clampedHeight
         );
 
         try {
@@ -1850,12 +1848,9 @@ class RenderWebGL extends EventEmitter {
             // and create the projection matrix for the draw.
             gl.viewport(0, 0, clampedWidth, clampedHeight);
             const projection = twgl.m4.ortho(
-                scratchBounds.left,
-                scratchBounds.right,
-                scratchBounds.top,
-                scratchBounds.bottom,
-                -1,
-                1
+                scratchBounds.left, scratchBounds.right,
+                scratchBounds.top, scratchBounds.bottom,
+                -1, 1
             );
 
             gl.clearColor(0, 0, 0, 0);
@@ -1877,20 +1872,13 @@ class RenderWebGL extends EventEmitter {
 
             const data = new Uint8Array(Math.floor(clampedWidth * clampedHeight * 4));
             gl.readPixels(
-                0,
-                0,
-                clampedWidth,
-                clampedHeight,
-                gl.RGBA,
-                gl.UNSIGNED_BYTE,
-                data
+                0, 0, clampedWidth, clampedHeight,
+                gl.RGBA, gl.UNSIGNED_BYTE, data
             );
             // readPixels can only read into a Uint8Array, but ImageData has to take a Uint8ClampedArray.
             // We can share the same underlying buffer between them to avoid having to copy any data.
             const imageData = new ImageData(
-                new Uint8ClampedArray(data.buffer),
-                clampedWidth,
-                clampedHeight
+                new Uint8ClampedArray(data.buffer), clampedWidth, clampedHeight
             );
 
             // On high-DPI devices, the canvas' width (in canvas pixels) will be larger than its width in CSS pixels.
@@ -1902,10 +1890,8 @@ class RenderWebGL extends EventEmitter {
 
             return {
                 imageData,
-                x: canvasSpaceBounds.left * ratio,
-                y: canvasSpaceBounds.bottom * ratio,
-                width: canvasSpaceBounds.width * ratio,
-                height: canvasSpaceBounds.height * ratio
+                x: canvasSpaceBounds.left * ratio, y: canvasSpaceBounds.bottom * ratio,
+                width: canvasSpaceBounds.width * ratio, height: canvasSpaceBounds.height * ratio
             };
         } finally {
             gl.deleteFramebuffer(bufferInfo.framebuffer);
@@ -1942,10 +1928,8 @@ class RenderWebGL extends EventEmitter {
 
         const bounds = new Rectangle();
         bounds.initFromBounds(
-            scratchX - radius,
-            scratchX + radius,
-            scratchY - radius,
-            scratchY + radius
+            scratchX - radius, scratchX + radius,
+            scratchY - radius, scratchY + radius
         );
 
         const pickX = scratchX - bounds.left;
@@ -1953,47 +1937,33 @@ class RenderWebGL extends EventEmitter {
 
         gl.viewport(0, 0, bounds.width, bounds.height);
         const projection = twgl.m4.ortho(
-            bounds.left,
-            bounds.right,
-            bounds.top,
-            bounds.bottom,
-            -1,
-            1
+            bounds.left, bounds.right,
+            bounds.top, bounds.bottom,
+            -1, 1
         );
 
         gl.clearColor(...this._backgroundColor4f);
         gl.clear(gl.COLOR_BUFFER_BIT);
         this._drawThese(
-            this._drawList,
-            ShaderManager.DRAW_MODE.default,
-            projection
+            this._drawList, ShaderManager.DRAW_MODE.default, projection
         );
 
         const data = new Uint8Array(Math.floor(bounds.width * bounds.height * 4));
         gl.readPixels(
-            0,
-            0,
-            bounds.width,
-            bounds.height,
-            gl.RGBA,
-            gl.UNSIGNED_BYTE,
-            data
+            0, 0, bounds.width, bounds.height,
+            gl.RGBA, gl.UNSIGNED_BYTE, data
         );
 
         const pixelBase = Math.floor(4 * (pickY * bounds.width + pickX));
         const color = {
-            r: data[pixelBase],
-            g: data[pixelBase + 1],
-            b: data[pixelBase + 2],
-            a: data[pixelBase + 3]
+            r: data[pixelBase], g: data[pixelBase + 1],
+            b: data[pixelBase + 2], a: data[pixelBase + 3]
         };
 
         if (this._debugCanvas) {
             this._debugCanvas.width = bounds.width;
             this._debugCanvas.height = bounds.height;
-            const ctx = this._debugCanvas.getContext('2d', {
-                willReadFrequently: true
-            });
+            const ctx = this._debugCanvas.getContext('2d', { willReadFrequently: true });
             const imageData = ctx.createImageData(bounds.width, bounds.height);
             imageData.data.set(data);
             ctx.putImageData(imageData, 0, 0);
@@ -2049,9 +2019,7 @@ class RenderWebGL extends EventEmitter {
         if (!this.offscreenTouching) {
             bounds.clamp(this._xLeft, this._xRight, this._yBottom, this._yTop);
         }
-        if (bounds.width === 0 || bounds.height === 0) {
-            return null;
-        }
+        if (bounds.width === 0 || bounds.height === 0) return null;
         return bounds;
     }
 
@@ -2065,9 +2033,7 @@ class RenderWebGL extends EventEmitter {
     _candidatesTouching (drawableID, candidateIDs) {
         const bounds = this._touchingBounds(drawableID);
         const result = [];
-        if (bounds === null) {
-            return result;
-        }
+        if (bounds === null) return result;
         // iterate through the drawables list BACKWARDS - we want the top most item to be the first we check
         for (let index = candidateIDs.length - 1; index >= 0; index--) {
             const id = candidateIDs[index];
@@ -2092,8 +2058,7 @@ class RenderWebGL extends EventEmitter {
 
                     if (bounds.intersects(candidateBounds)) {
                         result.push({
-                            id,
-                            drawable,
+                            id, drawable,
                             intersection: Rectangle.intersect(bounds, candidateBounds)
                         });
                     }
@@ -2111,9 +2076,7 @@ class RenderWebGL extends EventEmitter {
      */
     _candidatesBounds (candidates) {
         return candidates.reduce((memo, {intersection}) => {
-            if (!memo) {
-                return intersection;
-            }
+            if (!memo) return intersection;
             // store the union of the two rectangles in our static rectangle instance
             return Rectangle.union(memo, intersection, __candidatesBounds);
         }, null);
@@ -2223,9 +2186,7 @@ class RenderWebGL extends EventEmitter {
              */
             return;
         }
-        if ('skinId' in properties) {
-            this.updateDrawableSkinId(drawableID, properties.skinId);
-        }
+        if ('skinId' in properties) this.updateDrawableSkinId(drawableID, properties.skinId);
         drawable.updateProperties(properties);
     }
 
@@ -2252,17 +2213,11 @@ class RenderWebGL extends EventEmitter {
         const inset = Math.floor(Math.min(aabb.width, aabb.height) / 2);
 
         const sx = this._xRight - Math.min(FENCE_WIDTH, inset);
-        if (aabb.right + dx < -sx) {
-            x = Math.ceil(drawable._position[0] - (sx + aabb.right));
-        } else if (aabb.left + dx > sx) {
-            x = Math.floor(drawable._position[0] + (sx - aabb.left));
-        }
+        if (aabb.right + dx < -sx) x = Math.ceil(drawable._position[0] - (sx + aabb.right));
+        else if (aabb.left + dx > sx) x = Math.floor(drawable._position[0] + (sx - aabb.left));
         const sy = this._yTop - Math.min(FENCE_WIDTH, inset);
-        if (aabb.top + dy < -sy) {
-            y = Math.ceil(drawable._position[1] - (sy + aabb.top));
-        } else if (aabb.bottom + dy > sy) {
-            y = Math.floor(drawable._position[1] + (sy - aabb.bottom));
-        }
+        if (aabb.top + dy < -sy) y = Math.ceil(drawable._position[1] - (sy + aabb.top));
+        else if (aabb.bottom + dy > sy) y = Math.floor(drawable._position[1] + (sy - aabb.bottom));
         return [x, y];
     }
 
@@ -2326,15 +2281,11 @@ class RenderWebGL extends EventEmitter {
     penStamp (penSkinID, stampID) {
         this.dirty = true;
         const stampDrawable = this._allDrawables[stampID];
-        if (!stampDrawable) {
-            return;
-        }
+        if (!stampDrawable) return;
 
         // TW: The bounds will be snapped later
         const bounds = this._unsnappedTouchingBounds(stampID);
-        if (!bounds) {
-            return;
-        }
+        if (!bounds) return;
 
         this._doExitDrawRegion();
 
@@ -2355,17 +2306,13 @@ class RenderWebGL extends EventEmitter {
         gl.viewport(
             this._nativeSize[0] * 0.5 * quality + bounds.left,
             this._nativeSize[1] * 0.5 * quality - bounds.top,
-            bounds.width,
-            bounds.height
+            bounds.width, bounds.height
         );
         const projection = twgl.m4.ortho(
             // TW: We have to convert the snapped "screen-space" back to "stage-space" for rendering.
-            bounds.left / quality,
-            bounds.right / quality,
-            bounds.top / quality,
-            bounds.bottom / quality,
-            -1,
-            1
+            bounds.left / quality, bounds.right / quality,
+            bounds.top / quality, bounds.bottom / quality,
+            -1, 1
         );
 
         // Draw the stamped sprite onto the PenSkin's framebuffer.
@@ -2417,10 +2364,7 @@ class RenderWebGL extends EventEmitter {
 
         if (!this._pickBufferInfo) {
             this._pickBufferInfo = twgl.createFramebufferInfo(
-                gl,
-                attachments,
-                MAX_TOUCH_SIZE[0],
-                MAX_TOUCH_SIZE[1]
+                gl, attachments, MAX_TOUCH_SIZE[0], MAX_TOUCH_SIZE[1]
             );
         }
 
@@ -2428,18 +2372,12 @@ class RenderWebGL extends EventEmitter {
         // A 480x360 32-bpp buffer is 675 KiB.
         if (this._queryBufferInfo) {
             twgl.resizeFramebufferInfo(
-                gl,
-                this._queryBufferInfo,
-                attachments,
-                width,
-                height
+                gl, this._queryBufferInfo,
+                attachments, width, height
             );
         } else {
             this._queryBufferInfo = twgl.createFramebufferInfo(
-                gl,
-                attachments,
-                width,
-                height
+                gl, attachments, width, height
             );
         }
     }
@@ -2473,9 +2411,7 @@ class RenderWebGL extends EventEmitter {
      * state.
      */
     _doExitDrawRegion () {
-        if (this._exitRegion !== null) {
-            this._exitRegion();
-        }
+        if (this._exitRegion !== null) this._exitRegion();
         this._exitRegion = null;
         this._regionId = null;
     }
@@ -2518,7 +2454,6 @@ class RenderWebGL extends EventEmitter {
             const drawable = this._allDrawables[drawableID];
 
             const uniforms = {};
-            console.log(0, drawable.uniformApplied, !this.renderOffscreen);
             if (!this.renderOffscreen && drawable.uniformApplied) {
                 if (drawMode === ShaderManager.DRAW_MODE.default && drawable.skin) {
                     // If rotationCenterDirty or skinScaleDirty is dirty, then set _calculateTransform first
@@ -2531,9 +2466,7 @@ class RenderWebGL extends EventEmitter {
 
                     if (!drawable.inViewport(halfNativeSizeX, halfNativeSizeY)) continue;
                     // If unconfirm was not set before
-                    if (!uniformHasBeenSet) {
-                        Object.assign(uniforms, drawable.getUniforms());
-                    }
+                    if (!uniformHasBeenSet) Object.assign(uniforms, drawable.getUniforms());
                 } else {
                     Object.assign(uniforms, drawable.getUniforms());
                 }
@@ -2567,8 +2500,7 @@ class RenderWebGL extends EventEmitter {
 
             let effectBits = drawable.enabledEffects;
             effectBits &= Object.prototype.hasOwnProperty.call(opts, 'effectMask')
-                ? opts.effectMask
-                : effectBits;
+                ? opts.effectMask : effectBits;
             const newShader = this._shaderManager.getShader(drawMode, effectBits);
 
             // Manually perform region check. Do not create functions inside a
@@ -2585,28 +2517,21 @@ class RenderWebGL extends EventEmitter {
                 });
             }
 
-            console.log(2, drawable.uniformApplied, !this.renderOffscreen);
-            if (!this.renderOffscreen && drawable.uniformApplied) {
-                Object.assign(uniforms, drawable.getUniforms());
-            } else {
+            if (!this.renderOffscreen && drawable.uniformApplied) Object.assign(uniforms, drawable.getUniforms());
+            else {
                 drawable.uniformApplied = true;
                 Object.assign(
-                    uniforms,
-                    drawable.skin.getUniforms(drawableScale),
-                    drawable.getUniforms()
+                    uniforms, drawable.skin.getUniforms(drawableScale), drawable.getUniforms()
                 );
             }
 
             // Apply extra uniforms after the Drawable's, to allow overwriting.
-            if (opts.extraUniforms) {
-                Object.assign(uniforms, opts.extraUniforms);
-            }
+            if (opts.extraUniforms) Object.assign(uniforms, opts.extraUniforms);
 
             if (uniforms.u_skin) {
                 twgl.setTextureParameters(gl, uniforms.u_skin, {
                     minMag: drawable.skin.useNearest(drawableScale, drawable)
-                        ? gl.NEAREST
-                        : gl.LINEAR
+                        ? gl.NEAREST : gl.LINEAR
                 });
             }
 
@@ -2628,9 +2553,7 @@ class RenderWebGL extends EventEmitter {
 
         const [width, height] = drawable.skin.size;
         // No points in the hull if invisible or size is 0.
-        if (!drawable.getVisible() || width === 0 || height === 0) {
-            return [];
-        }
+        if (!drawable.getVisible() || width === 0 || height === 0) return [];
 
         drawable.updateCPURenderAttributes();
 
@@ -2689,9 +2612,7 @@ class RenderWebGL extends EventEmitter {
             }
 
             // If we managed to loop all the way through, there are no opaque pixels on this row. Go to the next one
-            if (x >= width) {
-                continue;
-            }
+            if (x >= width) continue;
 
             // Because leftEndPointIndex is initialized to -1, this is skipped for the first two rows.
             // It runs only when there are enough points in the left hull to make at least one line.
