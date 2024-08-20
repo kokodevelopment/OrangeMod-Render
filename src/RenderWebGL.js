@@ -1975,10 +1975,7 @@ class RenderWebGL extends EventEmitter {
         }
 
         return {
-            data: data,
-            width: bounds.width,
-            height: bounds.height,
-            color: color
+            data: data, width: bounds.width, height: bounds.height, color: color
         };
     }
 
@@ -2517,13 +2514,13 @@ class RenderWebGL extends EventEmitter {
                 });
             }
 
-            if (!this.renderOffscreen && drawable.uniformApplied) Object.assign(uniforms, drawable.getUniforms());
-            else {
+            /*if (!this.renderOffscreen && drawable.uniformApplied) Object.assign(uniforms, drawable.getUniforms());
+            else {*/
                 drawable.uniformApplied = true;
                 Object.assign(
                     uniforms, drawable.skin.getUniforms(drawableScale), drawable.getUniforms()
                 );
-            }
+            //}
 
             // Apply extra uniforms after the Drawable's, to allow overwriting.
             if (opts.extraUniforms) Object.assign(uniforms, opts.extraUniforms);
